@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 cd "$(dirname "$0")"
 
 # if vm running
@@ -34,6 +36,8 @@ assert() {
 		exit 1
 	fi
 }
+
+set +e
 
 test_port "2200"
 assert "Port 2200 should connect" $?
