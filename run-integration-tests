@@ -1,0 +1,46 @@
+#!/bin/bash
+
+cd "$(dirname "$0")"
+
+# if vm running
+if vagrant status | grep -q running; then
+	# just reprovision (for speed)
+	vagrant provision
+else
+	# vagrant up will fully deploy or just start if required
+	# after starting up provision is run automatically
+	vagrant up
+fi
+
+timeout=2
+ip=192.168.33.10
+
+test_port() {
+	port=$1
+	nc -w "$timeout" "$ip" "$port" > /dev/null 2>&1 <<EOF
+foo
+EOF
+	return $?
+}
+
+assert() {
+	message=$1
+	bool=$2
+
+	if [[ $bool == 0 ]]; then
+		echo "Assert: OK - $message"
+	else
+		echo "Assert: ERROR - $message"
+		exit 1
+	fi
+}
+
+test_port "2200"
+assert "Port 2200 should connect" $?
+! test_port "2201"
+assert "Port 2201 should not connect" $?
+! test_port "2202"
+assert "Port 2202 should not connect" $?
+
+# all done, cleanup
+# vagrant halt
